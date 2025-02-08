@@ -4,6 +4,13 @@ In this project I plan to use various methods to generate Pokemon and pixel art 
 
 I created a PyTorch implementation of a Variational Autoencoder (VAE) for generating pixel art images. The VAE architecture is designed to learn the underlying distribution of pixel art and generate new samples from this distribution. 
 
+## Overview
+
+A Variational Autoencoder is a generative model that learns a compressed, latent representation of data. It consists of two main components:
+
+* **Encoder:**  The encoder network takes an input image and compresses it into a lower-dimensional latent vector. This vector represents the essential features of the input image.  The encoder outputs the mean $\mu$ and log variance $\sigma$ of a distribution in the latent space.
+* **Decoder:** The decoder network takes a sample from the latent space (obtained by reparameterization using $\mu$ and $\sigma$) and attempts to reconstruct the original image.
+
 ## Dataset
 
 The pixel art dataset is available on [Kaggle](https://www.kaggle.com/datasets/ebrahimelgazar/pixel-art/data). It contains 89,000 16x16 RGB pixel art images. A few example images from the data are shown below. 
@@ -22,13 +29,6 @@ The pixel art dataset is available on [Kaggle](https://www.kaggle.com/datasets/e
 </table>
 
 
-
-## Overview
-
-A Variational Autoencoder is a generative model that learns a compressed, latent representation of data. It consists of two main components:
-
-* **Encoder:**  The encoder network takes an input image and compresses it into a lower-dimensional latent vector. This vector represents the essential features of the input image.  The encoder outputs the mean $\mu$ and log variance $\sigma$ of a distribution in the latent space.
-* **Decoder:** The decoder network takes a sample from the latent space (obtained by reparameterization using $\mu$ and $\sigma$) and attempts to reconstruct the original image.
 
 ## Architecture
 
@@ -102,9 +102,13 @@ trainer.train_model()
 
 ## Initial Results
 
-Below are my results after training for 150 epochs and with the configuration discussed above.
+The figure below shows images generated from a sample from the VAE latent space after training for 150 epochs and with the configuration discussed above.
 
-<img width="500" src="assets/pixelartresults1.png" />
+<img width="100%" src="assets/pixelartresults1.png" alt="Results after 150 epochs (generated images)" />
+
+The following image depicts the training loss over time for the model. 
+
+<img width="100%" src="assets/training_loss_vae.png" alt="Training loss over time plot" />
 
 ### To Replicate Results
 
@@ -121,3 +125,26 @@ python -m src.pipelines.pixelart_pipeline
 ```
 
 This should start model training based on my current pipeline. 
+
+
+## List of Files
+
+``src``: All code is contained inside this directory. 
+
+`src/data_loaders`: This folder contains files to load in different data sources (images). All the implemnted scripts are compatible with PyTorch DataLoaders, as demonstrated in the example pipeline above. Currently implemnted data loaders are: 
+
+- `pixelart_handler.py`: This is the primary dataset I've tested so far. The images are sized to 16 by 16 and as described above. The class inherits the PyTorch Dataset class, and can be loaded into a DataLoader. Additionally, it provides functions to gather the images from an external data folder (specified at the top of the file), and a get item function that resizes, permutes, and normalizes the image, returning a tensor. 
+- `pokemon_handler.py`: I plan to work with this dataset next to generate Pokemon images. I also am considering training on both pixel art and pokemon to get some interesting effects, particularly because the pokemon dataset I'm using only has 900 images. The images are sized to 64 by 64 in this case. I have had luck testing on this size with the default hidden layer sizes provided in the VanillaVAE model. 
+- `landscapes_handler.py`: This [Kaggle](https://www.kaggle.com/datasets/utkarshsaxenadn/landscape-recognition-image-dataset-12k-images) dataset includes 12,000 images of various landscapes in 5 categories. The data loader walks through all directories and gets all 12k images. Currently the images are resized to 224 by 224. I plan to try this dataset in the future to generate landscape images. 
+- `mnist_handler.py`: loads in the MNIST data from torchvision. Currently just maintains a traning and testing set, but more functions might be added in the future. 
+
+`model_architectures`: This folder will contain all of the implemented models. Currently, the following files exist in the folder:
+
+- `VAE/model/base_model.py`: This inherits from nn.Module and provides the essential structure for a variational autoencoder, but does not have any implemented code. 
+- `VAE/model/vae_model.py`: This contains the primary VanillaVAE class, along with some other experimental classes, which inherits from the base model. The forward method allows an instantiated model to be called directly as model(), without having to specific .forward() or .encode() for example. 
+
+`pipelines/pixelart_pipeline.py`: The pipelines folder can be considered essentially like the frontend of the library. It interacts the same way as if you installed and imported the code directly. The pixelart_pipeline file creates a new model, pixel art dataset, and trainer and trains the model for a specified number of epochs. 
+
+`training_scripts/train_vae.py`: The training scripts folder will contain all training loops implemented for the models I test, but currently just contains one for the variational autoencoder. This file manages a PyTorch trainer that loops over some number of epochs and performs all the necessary steps to train the model, including managing the loss function for the variational autoencoder. 
+
+`utils/dependencies.py`: This just imports all relevant libraries to keep the code clean in other areas. 
