@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision.utils import make_grid, save_image
 from tqdm import tqdm
 import pandas as pd
-from skimage import io
+from skimage import io, transform
 import os
 import fnmatch
 import random
@@ -25,5 +25,8 @@ import plotly.express as px
 from torch.utils.tensorboard import SummaryWriter
 import glob
 import pickle
-from sklearn.cluster import KMeans
 import cv2
+from torchvision.datasets import MNIST, FashionMNIST
+import torchvision.transforms as transforms
+import matplotlib.image as mpimg
+from torch.distributions import Uniform

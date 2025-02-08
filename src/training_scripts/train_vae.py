@@ -2,6 +2,8 @@
 
 
 from src.utils.dependencies import *
+import torch.distributions as dist
+
 
 class TrainVAE:
     def __init__(
@@ -33,23 +35,23 @@ class TrainVAE:
     def vae_loss(self, x, x_hat, mean, logvar):
         reproduction_loss = nn.functional.mse_loss(x_hat, x, reduction="sum")
         KLD = - 0.5 * torch.sum(1+ logvar - mean.pow(2) - logvar.exp())
-        return reproduction_loss + KLD
+        return reproduction_loss + 0.2*KLD
 
     def sample_latent_space(self):
         """Samples random latent vectors from a standard normal distribution."""
-        z = torch.randn(self.batch_size, self.model.latent_dim).to(self.device)
+        z = torch.randn(50, self.model.latent_dim).to(self.device)
         return z
     
     def train_model(self):
-#        print(self.data)
-        sampled_z = self.sample_latent_space()
+        sampled_z = self.sample_latent_space() # Uses the same samples to view progress 
+
         for epoch in range(self.epochs):
             overall_loss = 0
+            self.model.train()
+            self.model.zero_grad()
 
             for batch_num, x in enumerate(self.data):
                 x = x.to(self.device)
-                #x = torch.tensor(x, device=self.device)
-#                x = torch.flatten(x).to(self.device)
 
                 self.optimizer.zero_grad()
 
@@ -65,24 +67,25 @@ class TrainVAE:
                 loss.backward()
                 self.optimizer.step()
 
+                # Show batch images (might take a lot of extra time, remove if so)
+                grid = (x_hat.view(self.batch_size, 3, 16, 16))
+                
+
 
             # Log loss to TensorBoard
-            self.writer.add_scalar("Loss/train", overall_loss/(batch_num*self.batch_size), epoch)
+            self.writer.add_scalar("Loss", overall_loss/(batch_num*self.batch_size), epoch)
 
-            if epoch % 10==0 and self.save_images:
-                print("Sampling Latent Space!")
+            if epoch % 10 == 0 and self.save_images:
+                print("Sampling latent space!")
                 with torch.no_grad():
                     sampled_images = self.model.decode(sampled_z)
-
                     # Make a grid of sampled images to display on tensorboard. 
                     grid = torchvision.utils.make_grid(
                         sampled_images.detach().cpu().view(-1, *self.xdim) / 2 + 0.5, normalize=True)
 
-                    self.writer.add_image("LatentSpace/Samples", grid, epoch)
-
+                    self.writer.add_image("GeneratedImages", grid, epoch)
             
-            if epoch % 50 == 0:
-                print(f"Epoch {epoch}: {overall_loss/(batch_num*self.batch_size)}")
+            print(f"Epoch {epoch}: {overall_loss/(batch_num*self.batch_size)}")
         
         self.writer.close()
         return overall_loss
