@@ -1,8 +1,8 @@
 In this project I plan to use various methods to generate Pokemon and pixel art images, including variational autoencoders (VAEs), generative adversarial networks (GANs), and VAE-GANs. 
 
-# Pixel Art Generator with Variational Autoencoder (VAE)
+# Pixel Art Generator with Variational Autoencoder (VAE) and Generative Adversarial Network (GAN)
 
-I created a PyTorch implementation of a Variational Autoencoder (VAE) for generating pixel art images. The VAE architecture is designed to learn the underlying distribution of pixel art and generate new samples from this distribution. 
+I created a PyTorch implementation of a Variational Autoencoder (VAE) and a Generative Adversarial Network (GAN) for generating pixel art images. The VAE architecture is designed to learn the underlying distribution of pixel art and generate new samples from this distribution. The GAN architecture focuses on trying to create images that can't be easily distinguished from the original dataset. 
 
 ## Overview
 
@@ -10,6 +10,11 @@ A Variational Autoencoder is a generative model that learns a compressed, latent
 
 * **Encoder:**  The encoder network takes an input image and compresses it into a lower-dimensional latent vector. This vector represents the essential features of the input image.  The encoder outputs the mean $\mu$ and log variance $\sigma$ of a distribution in the latent space.
 * **Decoder:** The decoder network takes a sample from the latent space (obtained by reparameterization using $\mu$ and $\sigma$) and attempts to reconstruct the original image.
+
+A Generative Adversarial Network is comprised of a generator and a discriminator trained simultaneously and in connection with each other. This adversarial training essentially allows the discriminator to improve, making the generator's task harder and harder and ultimately producing a more realistic and robust image generator. 
+
+- **Discriminator:** The discriminator accepts an image and outputs the probability that the image is real given the training data. 
+- **Generator:** The generator takes in a random noise vector and generates a new (fake) image. The goal of the model is to produce realistic enough data to fool the discriminator. 
 
 ## Dataset
 
@@ -31,6 +36,8 @@ The pixel art dataset is available on [Kaggle](https://www.kaggle.com/datasets/e
 
 
 ## Architecture
+
+### Variational Autoencoder
 
 The architecture of the VAE used in this project is shown below. It is made up of convolutional layers. For pixel art the hidden dimensions I used were 32, 64, and 128, but the VanillaVAE class is meant to be adaptable for any number of layers. Check the pixelart_pipeline file under src/pipelines for the specific implementation. 
 
@@ -59,6 +66,8 @@ The architecture of the VAE used in this project is shown below. It is made up o
 **Loss Function**
 
 The loss function is a standard reconstruction error and KL Divergence loss (which attempts to structure the latent space to be more like a Gaussian distribution). 
+
+
 
 ## Code
 
@@ -100,15 +109,22 @@ trainer = TrainVAE(
 trainer.train_model()
 ```
 
+I implemented similar functionality for the GAN, where the discriminator and generator models are defined under `src/model_architectures/GAN/dcgan.py`. Each defines the model and implements a forward method. The training loop for the GAN can be found under `src/training_scripts/train_gan.py`, which maintains the TrainGAN class that runs the training loop by  giving the discriminator fake data to test, generating an image with the generator and calculating its loss based on the discriminator's evaluation of the image, and logging generated images over time. `src/pipelines/pixelartgan_pipeline.py` maintains code structured similar as that for the VAE shown above, but using these classes instead. 
+
 ## Initial Results
 
 The figure below shows images generated from a sample from the VAE latent space after training for 150 epochs and with the configuration discussed above.
 
-<img width="100%" src="assets/pixelartresults1.png" alt="Results after 150 epochs (generated images)" />
+<img width="100%" src="assets/pixelartresults1.png" alt="Results after 150 epochs (VAE generated images)" />
 
 The following image depicts the training loss over time for the model. 
 
 <img width="100%" src="assets/training_loss_vae.png" alt="Training loss over time plot" />
+
+For the GAN, the image below shows the output generations after only 8 epochs. Importantly note that I used the full dataset for this, rather than the 10000 images used to train the VAE. I also upscaled the original images to have a width and height of 64 pixels instead of 16. 
+
+<img width="100%"  src="assets/Pixel Art GAN 10 epochs.png" alt="Results after training GAN for 8 epochs on full dataset with 89000 images. " />
+
 
 ### To Replicate Results
 
@@ -122,6 +138,10 @@ cd PixelMon
 pip install -e . 
 
 python -m src.pipelines.pixelart_pipeline
+
+# or 
+
+python -m src.pipelines.pixelartgan_pipeline
 ```
 
 This should start model training based on my current pipeline. 
@@ -140,11 +160,14 @@ This should start model training based on my current pipeline.
 
 `model_architectures`: This folder will contain all of the implemented models. Currently, the following files exist in the folder:
 
+- `GAN/dcgan.py`: This file contains a PyTorch model class for a convolutional GAN. Specifically, both a Generator and a Discriminator class are implemented that inherit from nn.Module and maintain forward methods so that they can be directly called similar to ```model(x)```. 
 - `VAE/model/base_model.py`: This inherits from nn.Module and provides the essential structure for a variational autoencoder, but does not have any implemented code. 
 - `VAE/model/vae_model.py`: This contains the primary VanillaVAE class, along with some other experimental classes, which inherits from the base model. The forward method allows an instantiated model to be called directly as model(), without having to specific .forward() or .encode() for example. 
 
-`pipelines/pixelart_pipeline.py`: The pipelines folder can be considered essentially like the frontend of the library. It interacts the same way as if you installed and imported the code directly. The pixelart_pipeline file creates a new model, pixel art dataset, and trainer and trains the model for a specified number of epochs. 
+`pipelines`: The pipelines folder can be considered essentially like the frontend of the library. It interacts with it the same way as if you installed and imported the code directly. The following pipelines are currently implemented: 
+- `pixelartgan_pipeline.py`: This file creates a new DCGAN model (i.e. Discriminator and Generator models), loads the pixel art dataset, creates a trainer and trains the models for some specified number of epochs. 
+- `pixelart_pipeline.py`: Similarly, this contains the same type of pipeline but using the VanillaVAE model instead. It also maintains some additional functions for sampling from and visualizing the learned latent space. 
 
-`training_scripts/train_vae.py`: The training scripts folder will contain all training loops implemented for the models I test, but currently just contains one for the variational autoencoder. This file manages a PyTorch trainer that loops over some number of epochs and performs all the necessary steps to train the model, including managing the loss function for the variational autoencoder. 
+`training_scripts`: The training scripts folder contains the training loop implementations for the models I've explored so far (VAE and GAN). Both files, `train_vae.py` and `train_gan.py` implement custom training architectures for the different models, supporting their loss functions and training styles (i.e. VAE uses reconstruction and KLD loss while GAN trains generator and discriminator together). 
 
 `utils/dependencies.py`: This just imports all relevant libraries to keep the code clean in other areas. 

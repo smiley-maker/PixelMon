@@ -26,7 +26,7 @@ from torch.utils.tensorboard import SummaryWriter
 import glob
 import pickle
 import cv2
-from torchvision.datasets import MNIST, FashionMNIST
+from torchvision.datasets import MNIST, FashionMNIST, ImageFolder
 import torchvision.transforms as transforms
 import matplotlib.image as mpimg
 from torch.distributions import Uniform

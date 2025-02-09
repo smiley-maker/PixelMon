@@ -5,9 +5,10 @@ from src.utils.dependencies import *
 PIXELART_IMAGES = "/Users/jordan/Data/pixelart/images/images/"
 
 class PixelArtDataset(Dataset):
-    def __init__(self) -> None:
+    def __init__(self, img_size=16) -> None:
+        self.img_size = img_size
         self.image_dir = PIXELART_IMAGES
-        self.image_paths = sorted(self._find_files_(self.image_dir))[:10000]
+        self.image_paths = sorted(self._find_files_(self.image_dir))#[:10000]
         print(f"The Pixel Art Dataset has {len(self.image_paths)} images.")
     
     def __len__(self):
@@ -19,7 +20,7 @@ class PixelArtDataset(Dataset):
         if x.ndim == 2: # Convert grayscale to RGB
             x = np.stack([x] * 3, axis=-1)
 
-        x = transform.resize(x, (16, 16, 3), anti_aliasing=True)        
+        x = transform.resize(x, (self.img_size, self.img_size, 3), anti_aliasing=True)        
         x = torch.tensor(x).permute(2, 0, 1).float() # Channels first for PyTorch
         x = (x - x.min()) / (x.max() - x.min()) # Ensure pixel values are in [0, 1]
 
