@@ -3,7 +3,7 @@
 from src.utils.dependencies import *
 
 
-LANDSCAPE_IMAGE_PATH = "/Users/jordan/Data/Landscapes12k/"
+LANDSCAPE_IMAGE_PATH = "/Users/jordan/Data/pokemon/dataset/train/"
 class LandscapeDataset(Dataset):
     def __init__(self) -> None:
         super().__init__()
@@ -17,11 +17,12 @@ class LandscapeDataset(Dataset):
     def __getitem__(self, index : int) -> torch.tensor:
         image_path = self.image_paths[index]
         x = io.imread(image_path)
-        x.resize((3, 224, 224))
-        x = torch.tensor(x).float() / 255.0  #
+        x.resize((3, 64, 64))
+        x = torch.tensor(x).float()  #normalizes to be between 0 and 1.
+        x = (x - x.min()) / (x.max() - x.min())
         return x
     
-    def _find_files_(self, image_dir, pattern="*.jpeg"):
+    def _find_files_(self, image_dir, pattern="*.jpg"):
         """
         Finds all image files matching the specified pattern within the given directory and its subdirectories.
 

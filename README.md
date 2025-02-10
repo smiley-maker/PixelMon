@@ -1,8 +1,8 @@
-In this project I plan to use various methods to generate Pokemon and pixel art images, including variational autoencoders (VAEs), generative adversarial networks (GANs), and VAE-GANs. 
+In this project I plan to use various methods to generate Pokemon and other images, including variational autoencoders (VAEs), generative adversarial networks (GANs), and VAE-GANs. 
 
-# Pixel Art Generator with Variational Autoencoder (VAE) and Generative Adversarial Network (GAN)
+# Image Generator with Variational Autoencoder (VAE) and Generative Adversarial Network (GAN)
 
-I created a PyTorch implementation of a Variational Autoencoder (VAE) and a Generative Adversarial Network (GAN) for generating pixel art images. The VAE architecture is designed to learn the underlying distribution of pixel art and generate new samples from this distribution. The GAN architecture focuses on trying to create images that can't be easily distinguished from the original dataset. 
+I created a PyTorch implementation of a Variational Autoencoder (VAE) and a Generative Adversarial Network (GAN) for generating images. The VAE architecture is designed to learn the underlying distribution of pixel art and generate new samples from this distribution. The GAN architecture focuses on trying to create images that can't be easily distinguished from the original dataset. 
 
 ## Overview
 
@@ -16,9 +16,9 @@ A Generative Adversarial Network is comprised of a generator and a discriminator
 - **Discriminator:** The discriminator accepts an image and outputs the probability that the image is real given the training data. 
 - **Generator:** The generator takes in a random noise vector and generates a new (fake) image. The goal of the model is to produce realistic enough data to fool the discriminator. 
 
-## Dataset
+## Datasets
 
-The pixel art dataset is available on [Kaggle](https://www.kaggle.com/datasets/ebrahimelgazar/pixel-art/data). It contains 89,000 16x16 RGB pixel art images. A few example images from the data are shown below. 
+I used a pixel art dataset that is available on [Kaggle](https://www.kaggle.com/datasets/ebrahimelgazar/pixel-art/data). It contains 89,000 16x16 RGB pixel art images. A few example images from the data are shown below. 
 
 <table>
   <tr>
@@ -33,20 +33,23 @@ The pixel art dataset is available on [Kaggle](https://www.kaggle.com/datasets/e
   </tr>
 </table>
 
+I also tested the variational autoencoder model on an anime faces dataset from [Kaggle](https://www.kaggle.com/datasets/splcher/animefacedataset). It contains 63,632 images.
+
+<img src="assets/anime_dataset_example.jpg" />
 
 
 ## Architecture
 
 ### Variational Autoencoder
 
-The architecture of the VAE used in this project is shown below. It is made up of convolutional layers. For pixel art the hidden dimensions I used were 32, 64, and 128, but the VanillaVAE class is meant to be adaptable for any number of layers. Check the pixelart_pipeline file under src/pipelines for the specific implementation. 
+The architecture of the VAE used in this project is shown below. It is made up of convolutional layers. For pixel art the hidden dimensions I used were 32, 64, and 128, but the VanillaVAE class is meant to be adaptable for any number of layers. Check the pixelart_pipeline file under src/pipelines for the specific implementation. For the anime face generation, I used up to 512 hidden dimensions. 
 
 <img src="assets/vae image generator architecture.png" alt="Architecture diagram for the VAE used to generate pixel art images" />
 
 
 **Encoder:**
 
-* Input: 16x16x3 pixel art images.
+* Input: 16x16x3 pixel art images, or 64x64x3 for anime art images.
 * Convolutional layers (Conv2D) with kernel size 3, stride 2, and padding 1 are used to downsample the input and extract features.
 * Batch Normalization (BatchNorm2D) and LeakyReLU activation are applied after each convolutional layer.
 * The output of the convolutional layers is flattened and passed through two linear layers to obtain the mean (μ) and log variance (logvar) of the latent distribution.
@@ -113,7 +116,7 @@ I implemented similar functionality for the GAN, where the discriminator and gen
 
 ## Initial Results
 
-The figure below shows images generated from a sample from the VAE latent space after training for 150 epochs and with the configuration discussed above.
+The figure below shows images generated from a sample from the VAE latent space after training for 150 epochs on pixel art images and with the configuration discussed above.
 
 <img width="100%" src="assets/pixelartresults1.png" alt="Results after 150 epochs (VAE generated images)" />
 
@@ -124,6 +127,10 @@ The following image depicts the training loss over time for the model.
 For the GAN, the image below shows the output generations after only 8 epochs. Importantly note that I used the full dataset for this, rather than the 10000 images used to train the VAE. I also upscaled the original images to have a width and height of 64 pixels instead of 16. 
 
 <img width="100%"  src="assets/Pixel Art GAN 10 epochs.png" alt="Results after training GAN for 8 epochs on full dataset with 89000 images. " />
+
+Below shows the results I got training the variational autoencoder on anime face images, after 50 epochs. 
+
+<img width="100%" src="assets/anime_results_vae.png" alt="Results after training VAE on anime images for 50 epochs" />
 
 
 ### To Replicate Results

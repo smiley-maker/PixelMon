@@ -68,14 +68,14 @@ class TrainVAE:
                 self.optimizer.step()
 
                 # Show batch images (might take a lot of extra time, remove if so)
-                grid = (x_hat.view(self.batch_size, 3, 16, 16))
+                grid = (x_hat.view(self.batch_size, self.xdim[0], self.xdim[1], self.xdim[2]))
                 
 
 
             # Log loss to TensorBoard
             self.writer.add_scalar("Loss", overall_loss/(batch_num*self.batch_size), epoch)
 
-            if epoch % 10 == 0 and self.save_images:
+            if epoch % 1 == 0 and self.save_images:
                 print("Sampling latent space!")
                 with torch.no_grad():
                     sampled_images = self.model.decode(sampled_z)
